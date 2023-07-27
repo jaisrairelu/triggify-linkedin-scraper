@@ -5,6 +5,8 @@ __pycache__/
 test.py
 *.json
 *.html
+logs/
+errors/
 out.txt
 cookies.pickle
 # C extensions
