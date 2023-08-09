@@ -25,16 +25,16 @@ urllib3.disable_warnings(exceptions.InsecureRequestWarning)
 
 # Scraping Parameters
 
-search_launches = 5
-max_pages = 10
-page_per_keyword = 5
+search_launches = 5 # 5 times search launches PREDEFINED
+max_pages = 10 # 10 Max Page Predefined
+page_per_keyword = 5 ##5 page per keyword Predefined
 
 date_format = '%d-%b-%y %H:%M:%S'
 
 
 from functools import reduce
 def find(dictionary, keys:str, default=None):
-    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary) #
 
 class LinkedInSession:
     def __init__(self, country, city, zipcode, login_token, ip, use_proxy = True) -> None:
@@ -62,7 +62,7 @@ class LinkedInSession:
             print('Resetting URL to country')
             proxy_url = f'http://brd-customer-hl_68f06206-zone-zone2-country-{self.country}:z1u1zg8rg8zx@zproxy.lum-superproxy.io:22225'
 
-            self.session.proxies.update({
+            self.session.proxies.update({ # Reset of url 
                 'http': proxy_url,
                 'https': proxy_url,
             })
@@ -98,16 +98,16 @@ class LinkedInSession:
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
         try:
-            response = self.session.request("GET", url, headers=headers, data=payload)
+            response = self.session.request("GET", url, headers=headers, data=payload) # Request to made for login in linkdin
         except Exception as e:
             print("Connection Error,",e)
             return 'Connection Error'
 
         with open("linkdin.html", "w",encoding='utf-8') as f:
-            f.write(response.text)
+            f.write(response.text) # Response is saved in linkdin.html file 
 
         if 'Sign in' in response.text:
-            print('Invalid Token or Expired')
+            print('Invalid Token or Expired') # if Sign in response.text it will print
             return 'Token Error'
     
         # print('Creating new cookie file')
@@ -204,7 +204,7 @@ class LinkedInSession:
                 except:
                     raw_data['connection'] = ""
                 raw_data['primarySubtitle'] = str(i['primarySubtitle']['text']).replace('\u2022','').strip().replace("'","''")
-                raw_data['secondarySubtitle'] = str(i['secondarySubtitle']['text']).replace('\u2022','').strip().replace("'","''")
+                raw_data['secondarySubtitle'] = str(i['secondarySubtitle']['text']).replace('\u2022','').strip().replace("'","''") #Cleaning of data
                 raw_data['summary'] = str(i['summary']['text']).replace('\u2022','').strip().replace("'","''")
 
                 if raw_data['summary'].lower().find(keyword.lower()) == -1:
@@ -284,7 +284,7 @@ class LinkedInSession:
         }
 
         try:
-            response = self.session.request("GET", url, headers=headers, data=payload)
+            response = self.session.request("GET", url, headers=headers, data=payload) # request to the api 
         except Exception as e:
             print("Connection Error")
             return
@@ -292,11 +292,11 @@ class LinkedInSession:
         if response.status_code == 200:
             try:
                 pattern = 'urn:li:fsd_profileCard'
-                soup = BeautifulSoup(response.text, 'html.parser')
+                soup = BeautifulSoup(response.text, 'html.parser') # html parse using beautifulsoup
                 code: NavigableString = soup(text=re.compile(pattern))[0]
                 if not code:
                     return
-                user_id = code.text[code.text.find(pattern)+len(pattern)+2:]
+                user_id = code.text[code.text.find(pattern)+len(pattern)+2:] # getting of user id from url 
                 user_id = user_id[:user_id.find(",")]
 
                 return user_id
@@ -408,7 +408,7 @@ class LinkedInSession:
 
                 if i.get('*resharedUpdate'):
                     repost_id: str = i['*resharedUpdate']
-                    repost_id = repost_id[repost_id.find('activity:')+len('activity:'):]
+                    repost_id = repost_id[repost_id.find('activity:')+len('activity:'):]   #user activity work and work of data fetched.
                     repost_id = repost_id[:repost_id.find(',')]
                     reposts.append(repost_id)
                     print('Repost id',repost_id)
@@ -505,12 +505,12 @@ class LinkedInSession:
             return res
 
     def proxyTest(self):
-        print('testing proxy')
+        print('testing proxy') #proxy testing function to get ip,geo,city
         url = "http://lumtest.com/myip.json"
         try:
             response = self.session.request("GET", url)
         except Exception as e:
-            print("Connection Error",e)
+            print("Connection Error",e) 
             return
         
         if response.status_code == 200:
@@ -526,7 +526,7 @@ class LinkedInSession:
         
         return
 
-    def dataTest(self):
+    def dataTest(self): # datatest testing only
         data = {
             "7049291289539870720": {
                 "connection": "3rd+",
@@ -765,7 +765,7 @@ class LinkedInSession:
             for page in range(pages):
                 start = page*10
                 print("Page:",page+1,"Start:",start)
-                result: dict = self.searchPosts(input,start,search=filter)
+                result: dict = self.searchPosts(input,start,search=filter) # search in page of given keyword
                 if result['status'] == 'Successful':
                     return_data.update(result['data'])
                     # updateJSON('posts',result['data'])
@@ -775,7 +775,7 @@ class LinkedInSession:
                     print(result['message'])
                     return result['message']
                     
-                start += 10
+                start += 10 # it will increment+=10 every iteration
                 time.sleep(10)
         elif sarch_type == 'activity':
            
