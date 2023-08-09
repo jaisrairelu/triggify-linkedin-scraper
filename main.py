@@ -18,7 +18,7 @@ from api import allocateNewProxy
 
 conn = psycopg2.connect(
     host="3.77.153.132",
-    database="triggify_db",
+    database="triggify_db",  #Connection to Postgresql
     user="postgres",
     password="relu@123"
 )
@@ -27,30 +27,30 @@ cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS session_details (
     user_id integer PRIMARY KEY,
-    initial_scrape TIMESTAMP,
+    initial_scrape TIMESTAMP, 
     last_scraped TIMESTAMP,
     ip text,
     launch integer,
     note text);
-    """)
+    """)#Create of Table Schema in DB
 
-conn.commit()
+conn.commit() # used to commit the change
 
 def setNote(user_id, note):
     cursor.execute(f"""
         UPDATE "session_details"
-        SET note = '{note}' 
+        SET note = '{note}'        
         WHERE user_id = {user_id};
-    """)
+    """) #It will Update Note for the User in Session_detais Table
     conn.commit()
 
-    logger.info(f'{user_id} : NOTE SET : {note}')
+    logger.info(f'{user_id} : NOTE SET : {note}') #logger.info logs the message 
 
 def getNote(user_id):
     cursor.execute(f"""
-        SELECT note, last_scraped from "session_details"
+        SELECT note, last_scraped from "session_details" 
         WHERE user_id = {user_id};
-        """)
+        """) #It gets note and last_scraped data from db
     user_note = cursor.fetchone()
     return user_note
 
@@ -58,7 +58,7 @@ def genToken():
     url = "https://api.triggifyapp.com/api/account/login"
 
     payload = json.dumps({
-    "email": "mohitfreekaamaal.com@gmail.com",
+    "email": "mohitfreekaamaal.com@gmail.com", 
     "password": "123456"
     })
     headers = {
@@ -66,21 +66,21 @@ def genToken():
     }
 
     try:
-        response = requests.request("POST", url, headers=headers, data=payload)
+        response = requests.request("POST", url, headers=headers, data=payload) #sending of post requesting using Mail and Password
     except Exception as e:
         error_logger.error(f'Generating token error: {e}')
 
-    return response.json()['token']
+    return response.json()['token'] #Generating of token using authentication.
 
 def sendMail(user_id, email=None):
     note = getNote(user_id)
     if note['note'] == 'Email Sent':
-        logger.info(f'{user_id} : {email} : Daily Email API already sent')
+        logger.info(f'{user_id} : {email} : Daily Email API already sent')     #Email sent logs is saved.
         return
     
     url = f"https://api.triggifyapp.com/api/account/email-post?email={email}"
 
-    token = genToken()
+    token = genToken() #Generation  of Token 
     headers = {
         'Authorization': f'Bearer {token}'
     }
@@ -93,15 +93,15 @@ def sendMail(user_id, email=None):
     if response.status_code == 200:
         setNote(user_id,'Email Sent')
         cursor.execute(f"""
-            INSERT INTO "App_linkedinscrapedstatus" (user_id, status, created_at, updated_at)
+            INSERT INTO "App_linkedinscrapedstatus" (user_id, status, created_at, updated_at) 
             VALUES ({user_id}, true, '{datetime.utcnow().strftime(date_format)}',
             '{datetime.utcnow().strftime(date_format)}')
             ON CONFLICT(user_id) DO UPDATE SET status = true,
             updated_at = '{datetime.utcnow().strftime(date_format)}';
-            """)
+            """) #it will update the status in applinkedinscrapedstatus 'Email Sent'
         
         logger.info(f'{user_id} : {email} : Daily Email API : Status Code: {response.status_code} : {response.text}')
-    else:
+    else:                                                                                                              # If any Error Logs error with status code and text.
         error_logger.info(f'{user_id} : {email} : Daily Email API : Status Code: {response.status_code} : {response.text}')
 
 def tokenError(user_id, email):
@@ -112,27 +112,27 @@ def tokenError(user_id, email):
         'Authorization': f'Bearer {token}'
     }
 
-    note = getNote(user_id)
+    note = getNote(user_id) #To get note from the function drom DB
 
     if note['note'] == 'Token Error 2':
-        error_logger.info(f'{user_id} : {email} : Token Error API : Email already sent twice')
+        error_logger.info(f'{user_id} : {email} : Token Error API : Email already sent twice') #Mail of error to user second time save the logs 
         return
     
     if note['note'] == 'Token Error':
-        error_logger.info(f'{user_id} : {email} : Token Error API : Email already sent')
-        if note['last_scraped'] > (datetime.now() - timedelta(hours=48)):
+        error_logger.info(f'{user_id} : {email} : Token Error API : Email already sent') #Mial of error to user First time save the logs 
+        if note['last_scraped'] > (datetime.now() - timedelta(hours=48)): # lastscraped time is within 48hr.
             return
         else:
             setNote(user_id, 'Token Error 2')
-            error_logger.info(f'{user_id} : {email} : Token Error API : Sending Email again')
+            error_logger.info(f'{user_id} : {email} : Token Error API : Sending Email again') # usernote is updated to token error 2 to attempt new mail.
     
     try:
-        response = requests.request("GET", url, headers=headers)
+        response = requests.request("GET", url, headers=headers) # api request is done if any error it will logs an error.
     except Exception as e:
         error_logger.error(f'{user_id} : {email} : {response} : Token Error API : {e}')
 
-    setNote(user_id, 'Token Error')
-    error_logger.error(f'{user_id} : {email} : Token Error API : Status Code: {response.status_code} : {response.text}')
+    setNote(user_id, 'Token Error') #setNote Function Called to set Note in db.
+    error_logger.error(f'{user_id} : {email} : Token Error API : Status Code: {response.status_code} : {response.text}') #if any error it will logs an error.
 
 def resetUser(user_id, email):
     sendMail(user_id, email)
@@ -140,36 +140,36 @@ def resetUser(user_id, email):
     cursor.execute(f"""
         SELECT * FROM "session_details"
         WHERE user_id = {user_id};
-        """)
+        """) # It will Fetch Session_details from DB of given User Id.
     user_detail = None
     try:
-        user_detail = dict(cursor.fetchone())
+        user_detail = dict(cursor.fetchone()) #Convert Fetch data to Dictonary.
     except Exception as e:
         print(e)
     
-    if user_detail['initial_scrape'] < (datetime.now() - timedelta(hours=24)):
-        logger.info(f'{user_id} : All keywords have been scraped, Resetting User')
+    if user_detail['initial_scrape'] < (datetime.now() - timedelta(hours=24)): #Check the user details if time is greater than 24hr
+        logger.info(f'{user_id} : All keywords have been scraped, Resetting User') # All keywords scraped and reset the user. 
         cursor.execute(f"""
             UPDATE "session_details"
             SET launch = 0,
             initial_scrape = '{datetime.now().strftime(date_format)}'
             WHERE user_id = {user_id};
-        """)
+        """) # update in db
 
         cursor.execute(f"""
             UPDATE "App_userkeyword"
             SET is_scraped = false
             WHERE user_id = {user_id};
-        """)
+        """) #update app_userkeyword in db
         
         cursor.execute(f"""
             UPDATE "App_userurl"
             SET is_scraped = false
             WHERE user_id = {user_id};
-        """)
+        """) #update app_userurl in db
         
         conn.commit()
-        setNote(user_id,'None')
+        setNote(user_id,'None') #update the note in db calling setnote function
     else:
         logger.info(f'{user_id} : All keywords have been scraped but, initail scrape was less then 24h ago.')
 
@@ -214,8 +214,8 @@ def updateStatus(user_id):
         last_scraped = '{datetime.now().strftime(date_format)}'
         WHERE user_id = {user_id};
     """)
-    conn.commit()
-    setNote(user_id, 'None')
+    conn.commit() #updating of scrape status into db
+    setNote(user_id, 'None') # update note  of status in db 
     logger.info(f'{user_id} : Status Updated')
 
     return
@@ -224,7 +224,7 @@ def getCountryCode(country):
     with open(f"{base_dir}/country_code.json", "r", encoding='utf-8') as jsonFile:
         data: dict = json.load(jsonFile)
     if data.get(country):
-        return data[country]['code']
+        return data[country]['code'] #getting country code
     
     return None
 
@@ -339,9 +339,9 @@ def updateProfile(url_id, pData):
     cursor.execute(f"""
         UPDATE "App_userurl" SET 
         name = '{pData[1]}',
-        photo = '{pData[2]}'
+        photo = '{pData[2]}'     
         WHERE id = {url_id};
-    """)
+    """) #update of profile in db
     conn.commit()
 
 def postThread(keywords: list):
