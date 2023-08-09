@@ -314,7 +314,7 @@ def getIP(user_id, country, city):
         """)
     ip = None
     try:
-        ip = cursor.fetchone()[0]
+        ip = cursor.fetchone()[0] # getting of ip address
     except Exception as e:
         print(e)
     if ip:
@@ -479,7 +479,7 @@ def setup_log(name, log_file, level=logging.DEBUG):
     handler.setFormatter(formatter)
     handler
 
-    logger = logging.getLogger(name)
+    logger = logging.getLogger(name) # setup of logs to store error logs
     logger.setLevel(level)
     logger.addHandler(handler)
 
@@ -517,7 +517,7 @@ url_per_launch = 3
 
 if __name__ == '__main__':
 
-    logger.info(f'Initiating')
+    logger.info(f'Initiating') #logger intiation
 
     keywords_by_user: dict[int, list] = {}
     
@@ -532,7 +532,7 @@ if __name__ == '__main__':
         RIGHT JOIN "App_billingdetail" D ON C.user_id = D.user_id
         RIGHT JOIN "App_user" E ON D.user_id = E.id
         WHERE A.status = 'trialing' OR A.status = 'active';
-        """)
+        """) # select of required data from db.
 
     prev_id = None
     for i in cursor.fetchall():
